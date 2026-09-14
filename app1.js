@@ -3,7 +3,7 @@ const state = { data: null };
 const loadData = async () => {
   $('#status').text('加载中...').show();
   try {
-    const response = await fetch('data/books.json');
+    const response = await fetch('data/costs.json');
     if (!response.ok) {
       throw new Error('HTTP ' + response.status);
     }
@@ -13,7 +13,7 @@ const loadData = async () => {
       return;
     }
     state.data = data;
-    $('#sub-title').text(data.title + ' · 数据来源：个人消费金额数据');
+    $('#sub-title').text(data.title + ' · 数据来源：个人消费金额');
     $('#status').hide();
     renderCards(data);
     renderBarChart(data);
@@ -38,6 +38,26 @@ const renderCards = (data) => {
         </div>
       </div>
     `);
+  });
+};
+
+let barChart = null;
+
+const renderBarChart = (data) => {
+  if (barChart === null) {
+    barChart = echarts.init(document.querySelector('#bar-chart'));
+  }
+  barChart.setOption({
+    title: { text: '各月各用途消费金额量', left: 'center' },
+    tooltip: { trigger: 'axis' },
+    legend: { bottom: 0 },
+    xAxis: { data: data.months },
+    yAxis: { name: '元' },
+    series: data.series.map(s => ({
+      name: s.category,
+      type: 'bar',
+      data: s.counts
+    }))
   });
 };
 
