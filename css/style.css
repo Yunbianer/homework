@@ -1,0 +1,43 @@
+/* ===== 全局 ===== */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+/* 锚点平滑滚动（抵消 sticky 导航栏高度） */
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: 70px;
+}
+
+/* ===== Hero 区块 ===== */
+.hero-section {
+  min-height: 45vh;
+  background: linear-gradient(135deg, #0d6efd 0%, #3b82c4 60%, #6ea8fe 100%);
+}
+
+/* ===== 内容模块占位区 ===== */
+.module-placeholder {
+  margin-top: 2.5rem;
+}
+
+.section-title {
+  border-left: 5px solid #0d6efd;
+  padding-left: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+/* ===== 首页功能卡片 ===== */
+.module-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.module-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0.75rem 1.5rem rgba(13, 110, 253, 0.15) !important;
+}
