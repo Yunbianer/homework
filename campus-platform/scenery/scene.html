@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>山野风光 · 三维场景</title>
+  <script src="../confession/libs/three.min.js"></script>
+  <script src="../confession/libs/OrbitControls.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: rgba(255, 152, 0, 0.92); color: #fff;
+      padding: 0.5rem 1rem; display: flex; align-items: center; gap: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; }
+    .topbar a:hover { text-decoration: underline; }
+    .topbar .title { font-size: 1.05rem; }
+    .topbar .hint { margin-left: auto; font-size: 0.8rem; opacity: 0.9; }
+    #view { display: block; width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">← 返回风光首页</a>
+    <span class="title">🏔 山野风光</span>
+    <span class="hint">拖动鼠标旋转视角 · 滚轮缩放</span>
+  </div>
+
+  <div id="view"></div>
+
+  <script>
+    (function () {
+      const container = document.getElementById('view');
+      const scene = new THREE.Scene();
+
+      // 渐变晚霞天空（canvas 生成渐变贴图）
+      const skyCanvas = document.createElement('canvas');
+      skyCanvas.width = 16; skyCanvas.height = 256;
+      const sctx = skyCanvas.getContext('2d');
+      const grad = sctx.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0.0, '#3b2e63');   // 顶部偏紫
+      grad.addColorStop(0.45, '#c75b39');  // 橙红
+      grad.addColorStop(1.0, '#ffb36b');   // 地平线暖黄
+      sctx.fillStyle = grad; sctx.fillRect(0, 0, 16, 256);
+      scene.background = new THREE.CanvasTexture(skyCanvas);
+      scene.fog = new THREE.Fog(0xffa36b, 120, 420);
+
+      const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+      camera.position.set(0, 26, 120);
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      // 草地（起伏的平面）
+      const groundGeo = new THREE.PlaneGeometry(600, 600, 40, 40);
+      const pos = groundGeo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), y = pos.getY(i);
+        pos.setZ(i, Math.sin(x * 0.05) * 2 + Math.cos(y * 0.05) * 2 + (Math.random() - 0.5) * 1.5);
+      }
+      groundGeo.computeVertexNormals();
+      const ground = new THREE.Mesh(groundGeo, new THREE.MeshStandardMaterial({ color: 0x4e7a2a, roughness: 1 }));
+      ground.rotation.x = -Math.PI / 2;
+      scene.add(ground);
+
+      // 远山（几个圆锥剪影，不同深浅）
+      const mountainColors = [0x5b4a6b, 0x7a4a55, 0x9a5a4f];
+      for (let i = 0; i < 6; i++) {
+        const h = 50 + Math.random() * 40;
+        const m = new THREE.Mesh(
+          new THREE.ConeGeometry(30 + Math.random() * 25, h, 4),
+          new THREE.MeshStandardMaterial({ color: mountainColors[i % 3], roughness: 1, flatShading: true })
+        );
+        m.position.set(-180 + i * 70 + (Math.random() - 0.5) * 30, h / 2 - 6, -160 - Math.random() * 40);
+        m.rotation.y = Math.random() * Math.PI;
+        scene.add(m);
+      }
+
+      // 中央高耸岩柱（风化石）
+      const pillar = new THREE.Mesh(
+        new THREE.CylinderGeometry(2.2, 5, 70, 6),
+        new THREE.MeshStandardMaterial({ color: 0x3a2f3a, roughness: 1, flatShading: true })
+      );
+      pillar.position.set(0, 29, -10);
+      scene.add(pillar);
+      // 岩柱顶帽
+      const cap = new THREE.Mesh(
+        new THREE.CylinderGeometry(4.5, 3, 6, 6),
+        new THREE.MeshStandardMaterial({ color: 0x2f2634, roughness: 1, flatShading: true })
+      );
+      cap.position.set(0, 66, -10);
+      scene.add(cap);
+
+      // 太阳
+      const sun = new THREE.Mesh(
+        new THREE.SphereGeometry(14, 24, 24),
+        new THREE.MeshBasicMaterial({ color: 0xfff0c0 })
+      );
+      sun.position.set(-90, 70, -150);
+      scene.add(sun);
+
+      // 光源：暖色平行光（落日）+ 环境光
+      const sunLight = new THREE.DirectionalLight(0xffb066, 1.4);
+      sunLight.position.set(-90, 70, -150);
+      scene.add(sunLight);
+      scene.add(new THREE.AmbientLight(0xffccaa, 0.6));
+
+      // 飘浮的光点（氛围，像原图的萤火）
+      const N = 70; const arr = new Float32Array(N * 3);
+      for (let i = 0; i < N; i++) {
+        arr[i*3]   = (Math.random() - 0.5) * 260;
+        arr[i*3+1] = Math.random() * 40 + 2;
+        arr[i*3+2] = (Math.random() - 0.5) * 200 - 20;
+      }
+      const pts = new THREE.Points(
+        new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(arr, 3)),
+        new THREE.PointsMaterial({ color: 0xfff3c0, size: 1.6, transparent: true, opacity: 0.9 })
+      );
+      scene.add(pts);
+
+      const controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableZoom = true;
+
+      function tick() {
+        requestAnimationFrame(tick);
+        const t = Date.now() / 1000;
+        pillar.rotation.y = Math.sin(t * 0.2) * 0.02; // 极轻微晃动
+        pts.rotation.y = t * 0.01;
+        pts.position.y = Math.sin(t) * 1.5;
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      tick();
+
+      window.addEventListener('resize', function () {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+    })();
+  </script>
+</body>
+</html>
