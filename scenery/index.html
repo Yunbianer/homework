@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>山野风光 🏔</title>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, #3b2e63 0%, #c75b39 55%, #ffb36b 100%);
+    color: #fff; min-height: 100vh;
+  }
+  header { text-align: center; padding: 36px 16px 12px; }
+  header h1 { font-size: 2.3rem; letter-spacing: 3px; text-shadow: 0 2px 8px rgba(0,0,0,.3); }
+  header p { margin-top: 10px; opacity: .9; }
+  .back { display:inline-block; margin-top:12px; color:#fff; text-decoration:none; font-size:.9rem; opacity:.9; }
+  .back:hover { text-decoration: underline; }
+
+  #enterBtn {
+    display: inline-block; font-size: 1.25rem; font-weight: 700;
+    padding: 16px 44px; border-radius: 999px; color: #fff; text-decoration: none;
+    background: linear-gradient(135deg,#ff8c42,#c75b39);
+    box-shadow: 0 6px 18px rgba(0,0,0,.35); transition: transform .15s;
+  }
+  #enterBtn:hover { transform: scale(1.05); }
+
+  .cards { width: 90%; max-width: 900px; margin: 26px auto 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(230px,1fr)); gap: 16px; }
+  .card {
+    background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25);
+    border-radius: 16px; padding: 18px; backdrop-filter: blur(2px);
+  }
+  .card .ico { font-size: 1.8rem; }
+  .card h3 { margin: 8px 0 6px; font-size: 1.1rem; }
+  .card p { font-size: .9rem; opacity: .85; line-height: 1.5; }
+
+  .chart-box {
+    width: 90%; max-width: 760px; margin: 24px auto 44px;
+    background: rgba(255,255,255,.85); border-radius: 18px; padding: 16px; color:#333;
+  }
+  .chart-box h3 { margin-bottom: 8px; font-size: 1.05rem; }
+  #chart { width: 100%; height: 260px; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>山野风光 🏔</h1>
+    <p>落日、远山与岩柱——一处宁静的山野，邀你入画</p>
+    <a class="back" href="../index.html">← 返回整合首页</a>
+  </header>
+
+  <div style="text-align:center; margin: 22px auto;">
+    <a href="scene.html" id="enterBtn">进入三维场景 🏔</a>
+    <div style="margin-top: 10px;">
+      <a href="scene-af.html" style="color:#fff; opacity:.9; font-size:.9rem;">查看 A-Frame 版本 →</a>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card"><div class="ico">🌄</div><h3>落日晚霞</h3><p>橙红色渐变天空，雾气弥漫，营造黄昏氛围。</p></div>
+    <div class="card"><div class="ico">⛰</div><h3>连绵远山</h3><p>深浅错落的山峦剪影，由近及远渐隐于雾中。</p></div>
+    <div class="card"><div class="ico">🪨</div><h3>风化石柱</h3><p>场地中央高耸的岩柱，是画面的视觉焦点。</p></div>
+    <div class="card"><div class="ico">🌿</div><h3>草地萤火</h3><p>起伏的绿草地与飘浮光点，增添灵动气息。</p></div>
+  </div>
+
+  <div class="chart-box">
+    <h3>山野一天的光照强度变化（ECharts）</h3>
+    <div id="chart"></div>
+  </div>
+
+  <div class="chart-box">
+    <h3>山野各时段游览人数（Chart.js）</h3>
+    <canvas id="chart2"></canvas>
+  </div>
+
+  <script>
+    // 异步请求：从本地 data.json 加载数据
+    function loadData() {
+      return fetch('data.json').then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      });
+    }
+
+    // 用 jQuery 处理进入按钮的点击交互
+    $(function () {
+      $('#enterBtn').on('click', function () {
+        // 简单点击反馈：按钮微弹
+        $(this).css('transform', 'scale(0.95)');
+        var self = this;
+        setTimeout(function () { $(self).css('transform', ''); }, 150);
+      });
+    });
+
+    // 加载数据后渲染两张图表
+    loadData().then(function (data) {
+      // ---- ECharts：光照强度折线图 ----
+      if (typeof echarts !== 'undefined') {
+        var chart = echarts.init(document.getElementById('chart'));
+        chart.setOption({
+          tooltip: { trigger: 'axis' },
+          grid: { left: 50, right: 20, top: 30, bottom: 40 },
+          xAxis: { type: 'category', data: data.hours },
+          yAxis: { type: 'value', name: '光照强度' },
+          series: [{
+            type: 'line', smooth: true, data: data.light,
+            itemStyle: { color: '#c75b39' },
+            areaStyle: { color: 'rgba(199,91,57,0.25)' },
+            label: { show: true }
+          }]
+        });
+        window.addEventListener('resize', function () { chart.resize(); });
+      } else {
+        $('#chart').text('ECharts 加载失败（可能未联网）');
+      }
+
+      // ---- Chart.js：游览人数柱状图 ----
+      if (typeof Chart !== 'undefined') {
+        new Chart(document.getElementById('chart2'), {
+          type: 'bar',
+          data: {
+            labels: data.hours,
+            datasets: [{
+              label: '游览人数',
+              data: data.visitors,
+              backgroundColor: 'rgba(59,46,99,0.75)',
+              borderRadius: 4
+            }]
+          },
+          options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+      } else {
+        $('#chart2').text('Chart.js 加载失败（可能未联网）');
+      }
+    }).catch(function (err) {
+      $('#chart').text('数据加载失败：' + err.message + '（请通过本地服务器访问）');
+    });
+  </script>
+</body>
+</html>

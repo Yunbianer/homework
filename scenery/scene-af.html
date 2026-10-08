@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>山野风光 · A-Frame 场景</title>
+  <script src="../three-d/libs/aframe.min.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+      background: rgba(255, 152, 0, 0.92); color: #fff;
+      padding: 0.5rem 1rem; display: flex; align-items: center; gap: 1rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+    .topbar a { color: #fff; text-decoration: none; font-weight: bold; }
+    .topbar a:hover { text-decoration: underline; }
+    .topbar .title { font-size: 1.05rem; }
+    .topbar .hint { margin-left: auto; font-size: 0.8rem; opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a href="index.html">← 返回风光首页</a>
+    <span class="title">🏔 山野风光（A-Frame 版）</span>
+    <span class="hint">拖动鼠标旋转视角 · 滚轮缩放</span>
+  </div>
+
+  <a-scene fog="type: linear; color: #ffa36b; far: 420;" background="color: #ffb36b">
+    <!-- 天空 -->
+    <a-sky color="#ffa36b"></a-sky>
+
+    <!-- 草地 -->
+    <a-plane color="#4e7a2a" rotation="-90 0 0" width="600" height="600" position="0 0 0"></a-plane>
+
+    <!-- 远山（几个圆锥） -->
+    <a-cone color="#5b4a6b" radius-bottom="40" height="80" position="-140 34 -150"></a-cone>
+    <a-cone color="#7a4a55" radius-bottom="45" height="90" position="-60 39 -170"></a-cone>
+    <a-cone color="#9a5a4f" radius-bottom="35" height="70" position="40 29 -150"></a-cone>
+    <a-cone color="#5b4a6b" radius-bottom="42" height="85" position="130 37 -160"></a-cone>
+
+    <!-- 中央高耸岩柱 -->
+    <a-cylinder color="#3a2f3a" radius="3" height="70" position="0 35 -10"></a-cylinder>
+    <a-cylinder color="#2f2634" radius="4.5" height="6" position="0 73 -10"></a-cylinder>
+
+    <!-- 太阳 -->
+    <a-sphere color="#fff0c0" radius="12" position="-90 90 -180"></a-sphere>
+
+    <!-- 光源（提升亮度，让场景更明亮） -->
+    <a-light type="ambient" color="#ffccaa" intensity="1.2"></a-light>
+    <a-light type="directional" color="#ffe0b0" intensity="0.6" position="-90 90 -180"></a-light>
+
+    <!-- 相机 -->
+    <a-camera position="0 26 120" look-controls wasd-controls="enabled:false"></a-camera>
+  </a-scene>
+
+  <script>
+    // 动态生成浮动光点（A-Frame 实体 + 动画）
+    var scene = document.querySelector('a-scene');
+    var COUNT = 24;
+    for (var i = 0; i < COUNT; i++) {
+      var x = (Math.random() - 0.5) * 200;
+      var y = Math.random() * 30 + 4;
+      var z = (Math.random() - 0.5) * 160 - 20;
+      var dot = document.createElement('a-sphere');
+      dot.setAttribute('radius', '0.7');
+      dot.setAttribute('color', '#fff3c0');
+      dot.setAttribute('position', x + ' ' + y + ' ' + z);
+      // 上下浮动动画
+      dot.setAttribute('animation',
+        'property: position; from: ' + x + ' ' + y + ' ' + z +
+        '; to: ' + x + ' ' + (y + 3) + ' ' + z +
+        '; dir: alternate; loop: true; dur: ' + (2500 + Math.random() * 2000) + '; easing: easeInOutSine');
+      scene.appendChild(dot);
+    }
+  </script>
+</body>
+</html>
